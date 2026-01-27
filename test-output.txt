@@ -1,0 +1,4 @@
+
+> crud@0.1.0 test
+> jest --testTimeout=10000
+

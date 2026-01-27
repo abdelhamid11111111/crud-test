@@ -34,7 +34,7 @@ describe('API Route: /api/item/[id]', () => {
 
       expect(pool.query).toHaveBeenCalledWith(
         'SELECT * FROM items WHERE id = ?',
-        ['1']
+        [1]
       )
       expect(res.status).toBe(200)
       expect(data).toEqual(mockItem)

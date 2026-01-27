@@ -5,12 +5,24 @@ import { RowDataPacket, ResultSetHeader } from 'mysql2';
 // GET single item
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
+    // Validate that id is a positive integer string
+    if (!id || !/^\d+$/.test(id)) {
+      return NextResponse.json(
+        { error: 'Invalid ID format' },
+        { status: 400 }
+      );
+    }
+    
+    const itemId = parseInt(id, 10);
+
     const [rows] = await pool.query<RowDataPacket[]>(
       'SELECT * FROM items WHERE id = ?',
-      [params.id]
+      [itemId]
     );
 
     if (rows.length === 0) {
@@ -37,14 +49,16 @@ export async function PUT(
 ) {
   try {
     const { id } = await params; // Await the params first
-    const itemId = parseInt(id, 10); // Then convert to number
     
-    if (isNaN(itemId)) {
+    // Validate that id is a positive integer string
+    if (!id || !/^\d+$/.test(id)) {
       return NextResponse.json(
         { error: 'Invalid ID format' },
         { status: 400 }
       );
     }
+    
+    const itemId = parseInt(id, 10);
     
     const { name } = await request.json();
 
@@ -89,14 +103,16 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params; // Await the params first
-    const itemId = parseInt(id, 10); // Then convert to number
     
-    if (isNaN(itemId)) {
+    // Validate that id is a positive integer string
+    if (!id || !/^\d+$/.test(id)) {
       return NextResponse.json(
         { error: 'Invalid ID format' },
         { status: 400 }
       );
     }
+    
+    const itemId = parseInt(id, 10);
 
     const [result] = await pool.query<ResultSetHeader>(
       'DELETE FROM items WHERE id = ?',
