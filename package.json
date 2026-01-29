@@ -12,12 +12,14 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "dotenv": "^17.2.3",
     "mysql2": "^3.16.0",
     "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.0",
     "@tailwindcss/cli": "^4.1.18",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",

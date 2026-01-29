@@ -29,7 +29,7 @@ describe('API Route: /api/item/[id]', () => {
       (pool.query as jest.Mock).mockResolvedValue([[mockItem]])
 
       const req = new NextRequest('http://localhost:3000/api/item/1')
-      const res = await GET(req, { params: { id: '1' } })
+      const res = await GET(req, { params: Promise.resolve({ id: '1' }) })
       const data = await res.json()
 
       expect(pool.query).toHaveBeenCalledWith(
@@ -46,7 +46,7 @@ describe('API Route: /api/item/[id]', () => {
       (pool.query as jest.Mock).mockResolvedValue([[]])
 
       const req = new NextRequest('http://localhost:3000/api/item/1')
-      const res = await GET(req, { params: { id: '4' } })
+      const res = await GET(req, { params: Promise.resolve({ id: '4' })  })
       const data = await res.json()
 
       expect(res.status).toBe(404)
@@ -59,7 +59,7 @@ describe('API Route: /api/item/[id]', () => {
       (pool.query as jest.Mock).mockRejectedValue(new Error('DB Error'))
 
       const req = new NextRequest('http://localhost:3000/api/item/999')
-      const res = await GET(req, { params: { id: '999' } })
+      const res = await GET(req, { params: Promise.resolve({ id: '999' }) })
       const data = await res.json()
 
       expect(res.status).toBe(500)

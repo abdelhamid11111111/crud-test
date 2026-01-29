@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { GET as getItems, POST as createItem } from '../../app/api/item/route'
 import { GET as getItem, PUT as updateItem, DELETE as deleteItem } from '../../app/api/item/[id]/route'
 import { setupTestDatabase, cleanupTestDatabase, closeTestDatabase } from "../../lib/testDb";
-import { waitFor } from '@testing-library/react';
+
 
 
 
@@ -337,6 +337,81 @@ describe('API Integration Tests', () => {
             const dataPUT = await resPUT.json()
             expect(resPUT.status).toBe(404)
             expect(dataPUT.error).toBe('Item not found')
+
+        })
+
+    })
+
+    describe('Edge cases integration', () => {
+
+        it('should handle special characters in note names', async () => {
+            const specialCharacters = [
+                'note with "quotes"',
+                "note with 'apostrophe'",
+                'note with <HTML>',
+                'note with emoji 😀',
+                'note with newline\ncharacter'
+            ]
+
+            for (const specialCharacter of specialCharacters){
+                const reqPOST = new NextRequest("http://localhost:3000/api/item", {
+                    method: 'POST',
+                    body: JSON.stringify({ name: specialCharacter })
+                }) 
+                const res = await createItem(reqPOST)
+                const data = await res.json()
+                expect(res.status).toBe(201)
+                expect(data.name).toBe(specialCharacter)
+            }
+
+            // verify all were created
+            const resGET = await getItems()
+            const dataGET = await resGET.json()
+            expect(dataGET).toHaveLength(specialCharacters.length)
+            expect(resGET.status).toBe(200)
+
+        })
+
+        it('should handle very long note names', async () => {
+            const longName = 'A'.repeat(255)
+
+            const reqPOST = new NextRequest("http://localhost:3000/api/item", {
+                    method: 'POST',
+                    body: JSON.stringify({ name: longName })
+                })
+
+            const res = await createItem(reqPOST)
+            const data = await res.json()
+
+            expect(res.status).toBe(201)
+            expect(data.name).toBe('A'.repeat(255))
+
+        })
+
+        it('should handle rapid create-delete cycles', async () => {
+
+            for (let i = 0; i < 3; i++) {
+                // create
+                const reqPOST = new NextRequest('http://localhost:3000/api/item', {
+                    method: 'POST',
+                    body: JSON.stringify({ name: `cycle ${i}` })
+                })
+                const resPOST = await createItem(reqPOST)
+                const dataPOST = await resPOST.json()
+                const itemId = dataPOST.id;
+
+                // delete
+                const reqDELETE = new NextRequest(`http://localhost:3000/api/item/${itemId}`, {
+                    method: 'DELETE'
+                })
+                const resDELETE = await deleteItem(reqDELETE, { params: Promise.resolve({ id: itemId}) })
+                expect(resDELETE.status).toBe(200)
+            }
+            
+                // should be empty
+                const res = await getItems()
+                const data = await res.json()
+                expect(data).toHaveLength(0)
 
         })
 
